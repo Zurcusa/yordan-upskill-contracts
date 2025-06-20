@@ -1,0 +1,22 @@
+# Foundry build files
+cache/
+out/
+
+# Foundry deployment logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+/broadcast/**/run-latest.json
+/broadcast/**/run-*.json
+
+# Node.js dependencies
+node_modules
+
+# Environment variables
+.env
+
+# IDE and system files
+.vscode/
+
+# Logs
+*.log
