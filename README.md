@@ -18,8 +18,8 @@ A lightweight, gas-optimized suite of Solidity 0.8.30 contracts that lets anyone
 
 ```
 contracts/            → core Solidity sources
+lib/                  → external libraries
 script/               → Forge scripts (deploy & lifecycle)
-broadcast/            → JSON-encoded tx traces (autogen)
 tests/                → Foundry unit & integration tests
 ```
 
