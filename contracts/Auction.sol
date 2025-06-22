@@ -14,7 +14,6 @@ pragma solidity ^0.8.30;
  *           • The seller can cancel if no bids have been placed.
  *           • Inherits {Ownable} for access control; the deployer is the seller/owner.
  */
-
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -88,17 +87,14 @@ contract Auction is IERC721Receiver, Ownable, ReentrancyGuard {
     /// @param _nftId           The ID of the auctioned NFT
     /// @param _duration        Duration of the auction (in seconds)
     /// @param _minBidIncrement Minimum increment required for new bids
-    constructor(
-        address _seller,
-        address _nft,
-        uint256 _nftId,
-        uint256 _duration,
-        uint256 _minBidIncrement
-    ) Ownable(_seller) {
+    constructor(address _seller, address _nft, uint256 _nftId, uint256 _duration, uint256 _minBidIncrement)
+        Ownable(_seller)
+    {
         if (_seller == address(0)) revert ZeroAddressError();
         if (_nft == address(0)) revert ZeroAddressError();
-        if (_duration == 0 || _duration > MAX_DURATION)
+        if (_duration == 0 || _duration > MAX_DURATION) {
             revert InvalidDurationError();
+        }
         if (_minBidIncrement == 0) revert InvalidMinBidIncrementError();
 
         nft = IERC721(_nft);
@@ -134,10 +130,12 @@ contract Auction is IERC721Receiver, Ownable, ReentrancyGuard {
      *         Emits {AuctionStarted}.
      */
     function start() external onlyOwner {
-        if (auctionState != AuctionState.NotStarted)
+        if (auctionState != AuctionState.NotStarted) {
             revert AuctionAlreadyStartedError();
-        if (nft.getApproved(nftId) != address(this))
+        }
+        if (nft.getApproved(nftId) != address(this)) {
             revert NotApprovedForNFTError();
+        }
 
         auctionState = AuctionState.Active;
         uint256 currentTime = block.timestamp;
@@ -205,8 +203,9 @@ contract Auction is IERC721Receiver, Ownable, ReentrancyGuard {
      *         Transfers NFT back to seller and emits {AuctionCancelled}.
      */
     function cancelAuction() external onlyOwner {
-        if (auctionState != AuctionState.Active)
+        if (auctionState != AuctionState.Active) {
             revert AuctionNotCancellableError();
+        }
         if (highestBidder != address(0)) revert BidExistsError();
 
         auctionState = AuctionState.Ended;
@@ -246,7 +245,7 @@ contract Auction is IERC721Receiver, Ownable, ReentrancyGuard {
      *      Reverts with {ETHTransferFailedError} on failure.
      */
     function _safeTransferETH(address receiver, uint256 amount) internal {
-        (bool success, ) = receiver.call{value: amount}("");
+        (bool success,) = receiver.call{value: amount}("");
         if (!success) revert ETHTransferFailedError();
     }
 
@@ -268,12 +267,7 @@ contract Auction is IERC721Receiver, Ownable, ReentrancyGuard {
     /**
      * @inheritdoc IERC721Receiver
      */
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 }

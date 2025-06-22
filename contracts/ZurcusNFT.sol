@@ -12,7 +12,6 @@ pragma solidity ^0.8.30;
  *           • Owner can withdraw all accrued ETH with {withdraw}.
  *           • Utilises {AccessControl} for whitelist tracking and {Ownable} for admin rights.
  */
-
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -92,10 +91,7 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
     /*───────────────────────── MODIFIERS ──────────────────────────*/
     // Enforce whitelist during the private phase.
     modifier onlyWhitelisted() {
-        if (
-            salePhase == SalePhase.PrivateSale &&
-            !hasRole(WHITELISTED_ROLE, msg.sender)
-        ) {
+        if (salePhase == SalePhase.PrivateSale && !hasRole(WHITELISTED_ROLE, msg.sender)) {
             revert SenderNotWhitelistedError();
         }
         _;
@@ -150,7 +146,7 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
     function withdraw() external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         address payable ownerAddr = payable(owner());
-        (bool sent, ) = ownerAddr.call{value: balance}("");
+        (bool sent,) = ownerAddr.call{value: balance}("");
         if (!sent) revert WithdrawFailedError();
         emit FundsWithdrawn(balance);
     }
@@ -173,8 +169,9 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
      *      • {WhitelistedUserAdded}
      */
     function addWhitelistedUser(address _user) external onlyOwner {
-        if (hasRole(WHITELISTED_ROLE, _user))
+        if (hasRole(WHITELISTED_ROLE, _user)) {
             revert UserAlreadyWhitelistedError();
+        }
         _grantRole(WHITELISTED_ROLE, _user);
         emit WhitelistedUserAdded(_user);
     }
@@ -231,9 +228,7 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
     /**
      * @dev Resolve multiple inheritance of {supportsInterface}.
      */
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC721, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

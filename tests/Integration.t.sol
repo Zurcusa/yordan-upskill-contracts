@@ -47,12 +47,7 @@ contract IntegrationTest is Test, ERC721Holder {
         /*---------- Create auction for tokenId 1 ----------*/
         // ALICE approves factory-created auction later; first deploy auction
         vm.prank(ALICE);
-        address auctionAddr = factory.createAuction(
-            address(nft),
-            1,
-            DURATION,
-            MIN_INC
-        );
+        address auctionAddr = factory.createAuction(address(nft), 1, DURATION, MIN_INC);
         Auction auction = Auction(payable(auctionAddr));
 
         // ALICE approves auction and owner starts it (owner is ALICE of tokenId?) Actually seller must be ALICE.
@@ -79,10 +74,7 @@ contract IntegrationTest is Test, ERC721Holder {
         assertEq(nft.ownerOf(1), BOB, "Token should belong to highest bidder");
         assertEq(auction.highestBid(), 1 ether + MIN_INC);
         // Seller (ALICE) balance increased
-        assertEq(
-            ALICE.balance,
-            10 ether - PRICE - (1 ether) + (1 ether + MIN_INC)
-        );
+        assertEq(ALICE.balance, 10 ether - PRICE - (1 ether) + (1 ether + MIN_INC));
     }
 
     /*───────────────────────── WITHDRAW FLOW ──────────────────────────*/
@@ -95,12 +87,7 @@ contract IntegrationTest is Test, ERC721Holder {
 
         // Deploy auction for tokenId 1
         vm.prank(ALICE);
-        address auctionAddr = factory.createAuction(
-            address(nft),
-            1,
-            DURATION,
-            MIN_INC
-        );
+        address auctionAddr = factory.createAuction(address(nft), 1, DURATION, MIN_INC);
         Auction auction = Auction(payable(auctionAddr));
 
         // ALICE approves & starts auction
@@ -144,12 +131,7 @@ contract IntegrationTest is Test, ERC721Holder {
 
         // Deploy auction
         vm.prank(ALICE);
-        address auctionAddr = factory.createAuction(
-            address(nft),
-            1,
-            DURATION,
-            MIN_INC
-        );
+        address auctionAddr = factory.createAuction(address(nft), 1, DURATION, MIN_INC);
         Auction auction = Auction(payable(auctionAddr));
 
         vm.prank(ALICE);

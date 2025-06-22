@@ -6,7 +6,6 @@ pragma solidity ^0.8.30;
  * @notice Deploys and tracks Auction contracts, ensuring only one active auction exists per NFT/token.
  * @dev    Mimics style and best-practices of `Auction.sol` / `ZurcusNFT.sol`.
  */
-
 import "./Auction.sol";
 
 contract AuctionFactory {
@@ -46,41 +45,28 @@ contract AuctionFactory {
      * @param _minBidIncrement Minimum bid increment.
      * @return auctionAddr  Address of the deployed auction.
      */
-    function createAuction(
-        address _collection,
-        uint256 _tokenId,
-        uint256 _duration,
-        uint256 _minBidIncrement
-    ) external returns (address auctionAddr) {
+    function createAuction(address _collection, uint256 _tokenId, uint256 _duration, uint256 _minBidIncrement)
+        external
+        returns (address auctionAddr)
+    {
         if (_collection == address(0)) revert ZeroAddressError();
-        if (_duration == 0 || _duration > MAX_AUCTION_DURATION)
+        if (_duration == 0 || _duration > MAX_AUCTION_DURATION) {
             revert InvalidDurationError();
+        }
         if (_minBidIncrement == 0) revert InvalidMinBidIncrementError();
         bytes32 slotKey = _key(_collection, _tokenId);
         if (liveAuctions[slotKey] != address(0)) revert AuctionExistsError();
 
-        auctionAddr = address(
-            new Auction(msg.sender, _collection, _tokenId, _duration, _minBidIncrement)
-        );
+        auctionAddr = address(new Auction(msg.sender, _collection, _tokenId, _duration, _minBidIncrement));
 
         auctions.push(auctionAddr);
         liveAuctions[slotKey] = auctionAddr;
 
-        emit AuctionCreated(
-            auctionAddr,
-            msg.sender,
-            _collection,
-            _tokenId,
-            _duration,
-            _minBidIncrement
-        );
+        emit AuctionCreated(auctionAddr, msg.sender, _collection, _tokenId, _duration, _minBidIncrement);
     }
 
     /// @dev Computes the storage key for a given NFT contract and tokenId.
-    function _key(
-        address _collection,
-        uint256 _tokenId
-    ) private pure returns (bytes32) {
+    function _key(address _collection, uint256 _tokenId) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(_collection, _tokenId));
     }
 

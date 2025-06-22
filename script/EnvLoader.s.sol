@@ -15,9 +15,7 @@ abstract contract EnvLoader is Script {
     /// @notice    Loads private key from the .env as a uint256
     /// @param key The .env variable key
     /// @return    'The' private key as uint256
-    function getEnvPrivateKey(
-        string memory key
-    ) internal view returns (uint256) {
+    function getEnvPrivateKey(string memory key) internal view returns (uint256) {
         try vm.envBytes32(key) returns (bytes32 keyBytes) {
             require(keyBytes != bytes32(0), string.concat(key, " is empty"));
             return uint256(keyBytes);
@@ -53,9 +51,7 @@ abstract contract EnvLoader is Script {
     /// @notice    Loads non-empty string from .env
     /// @param key The .env variable key
     /// @return    'The' parsed string value
-    function getEnvString(
-        string memory key
-    ) internal view returns (string memory) {
+    function getEnvString(string memory key) internal view returns (string memory) {
         try vm.envString(key) returns (string memory val) {
             require(bytes(val).length > 0, string.concat(key, " is empty"));
             return val;

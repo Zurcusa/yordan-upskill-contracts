@@ -42,13 +42,7 @@ contract AuctionTest is Test, ERC721Holder {
         nft = new MockERC721();
         tokenId = nft.mint(OWNER);
 
-        auction = new Auction(
-            OWNER,
-            address(nft),
-            tokenId,
-            DURATION,
-            MIN_INCREMENT
-        );
+        auction = new Auction(OWNER, address(nft), tokenId, DURATION, MIN_INCREMENT);
 
         // Fund bidders
         vm.deal(ALICE, 10 ether);
@@ -61,10 +55,7 @@ contract AuctionTest is Test, ERC721Holder {
         nft.approve(address(auction), tokenId);
 
         vm.expectEmit();
-        emit Auction.AuctionStarted(
-            block.timestamp,
-            block.timestamp + DURATION
-        );
+        emit Auction.AuctionStarted(block.timestamp, block.timestamp + DURATION);
 
         auction.start();
 

@@ -11,6 +11,7 @@ import "forge-std/console.sol";
 /*───────────────────────── MOCK ──────────────────────────*/
 contract MockERC721 is ERC721 {
     uint256 private _id;
+
     constructor() ERC721("Mock", "MCK") {}
 
     function mint(address to) external returns (uint256) {
@@ -41,10 +42,7 @@ contract AuctionFactoryTest is Test, ERC721Holder {
     }
 
     /*───────────────────────── HELPERS ──────────────────────────*/
-    function _slotKey(
-        address _collection,
-        uint256 _id
-    ) internal pure returns (bytes32) {
+    function _slotKey(address _collection, uint256 _id) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(_collection, _id));
     }
 
@@ -53,21 +51,9 @@ contract AuctionFactoryTest is Test, ERC721Holder {
         bytes32 key = _slotKey(address(nft), tokenId);
 
         vm.expectEmit(false, true, true, true);
-        emit AuctionFactory.AuctionCreated(
-            address(0),
-            OWNER,
-            address(nft),
-            tokenId,
-            DURATION,
-            MIN_INC
-        );
+        emit AuctionFactory.AuctionCreated(address(0), OWNER, address(nft), tokenId, DURATION, MIN_INC);
 
-        address auctionAddr = factory.createAuction(
-            address(nft),
-            tokenId,
-            DURATION,
-            MIN_INC
-        );
+        address auctionAddr = factory.createAuction(address(nft), tokenId, DURATION, MIN_INC);
 
         assertEq(factory.liveAuctions(key), auctionAddr);
         assertEq(factory.auctions(0), auctionAddr);
@@ -92,12 +78,7 @@ contract AuctionFactoryTest is Test, ERC721Holder {
 
     /*───────────────────────── REMOVE ──────────────────────────*/
     function _deployAndEnd() internal returns (Auction auction) {
-        address auctionAddr = factory.createAuction(
-            address(nft),
-            tokenId,
-            DURATION,
-            MIN_INC
-        );
+        address auctionAddr = factory.createAuction(address(nft), tokenId, DURATION, MIN_INC);
         auction = Auction(payable(auctionAddr));
 
         // start & end auction with no bids
@@ -115,9 +96,7 @@ contract AuctionFactoryTest is Test, ERC721Holder {
     }
 
     function testRemoveAuction_Reverts_NotEnded() public {
-        address payable auctionAddr = payable(
-            factory.createAuction(address(nft), tokenId, DURATION, MIN_INC)
-        );
+        address payable auctionAddr = payable(factory.createAuction(address(nft), tokenId, DURATION, MIN_INC));
         nft.approve(auctionAddr, tokenId);
         Auction(auctionAddr).start();
         vm.expectRevert(AuctionFactory.AuctionNotEndedError.selector);

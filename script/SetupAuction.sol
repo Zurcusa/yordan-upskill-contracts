@@ -75,14 +75,7 @@ contract MintAndCreateAuction1Script is EnvLoader {
     /// @notice                Deploys an English auction for the minted NFT
     /// @param tokenId         The ID of the NFT to auction
     /// @return auctionAddress The address of the newly created auction contract
-    function deployAuction(
-        uint256 tokenId
-    ) internal returns (address auctionAddress) {
-        auctionAddress = factory.createAuction(
-            address(nft),
-            tokenId,
-            auctionDuration,
-            minBidIncrement
-        );
+    function deployAuction(uint256 tokenId) internal returns (address auctionAddress) {
+        auctionAddress = factory.createAuction(address(nft), tokenId, auctionDuration, minBidIncrement);
     }
 }

@@ -97,10 +97,7 @@ contract ZurcusNFTTest is Test {
 
         nft.addWhitelistedUser(ALICE);
 
-        assertTrue(
-            nft.hasRole(nft.WHITELISTED_ROLE(), ALICE),
-            "ALICE should be whitelisted"
-        );
+        assertTrue(nft.hasRole(nft.WHITELISTED_ROLE(), ALICE), "ALICE should be whitelisted");
     }
 
     function testAddWhitelistedUser_Reverts_NotOwner() public {
@@ -165,15 +162,13 @@ contract ZurcusNFTTest is Test {
 
     function testReceive_Reverts_DirectTransfer() public {
         vm.expectRevert(ZurcusNFT.DirectTransferNotAllowed.selector);
-        (bool ok, ) = address(nft).call{value: PRICE}("");
+        (bool ok,) = address(nft).call{value: PRICE}("");
         ok;
     }
 
     function testFallback_Reverts_DirectCall() public {
         vm.expectRevert(ZurcusNFT.DirectTransferNotAllowed.selector);
-        (bool ok, ) = address(nft).call{value: PRICE}(
-            abi.encodeWithSignature("doesNotExist()")
-        );
+        (bool ok,) = address(nft).call{value: PRICE}(abi.encodeWithSignature("doesNotExist()"));
         ok;
     }
 
