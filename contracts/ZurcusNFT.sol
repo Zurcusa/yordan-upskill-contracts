@@ -1,13 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+/**
+ * @title  Zurcus NFT Collection
+ * @notice ERC-721 contract with a two-phase minting process (private whitelist + public sale).
+ * @dev    Key features:
+ *           • Fixed-price minting controlled by the owner via {setPrice}.
+ *           • PrivateSale phase enforces a whitelist managed through {addWhitelistedUser} / {removeWhitelistedUser}.
+ *           • PublicSale phase allows anyone to mint once activated by the owner.
+ *           • Max supply is immutable and enforced in {mint}.
+ *           • Owner can withdraw all accrued ETH with {withdraw}.
+ *           • Utilises {AccessControl} for whitelist tracking and {Ownable} for admin rights.
+ */
+
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
-    // Errors
+    /*───────────────────────── ERRORS ──────────────────────────*/
     error SenderNotWhitelistedError();
     error UserAlreadyWhitelistedError();
     error InvalidPhaseError();
@@ -21,25 +33,25 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
     error InvalidMaxSupplyError();
     error ExceedsMaxSupplyError();
 
-    // Enums
+    /*───────────────────────── ENUMS ──────────────────────────*/
     enum SalePhase {
         PrivateSale,
         PublicSale
     }
 
-    // Events
+    /*───────────────────────── EVENTS ──────────────────────────*/
     event PriceUpdated(uint256 oldPrice, uint256 newPrice);
     event WhitelistedUserAdded(address indexed user);
     event SalePhaseUpdated(SalePhase oldPhase, SalePhase newPhase);
     event FundsWithdrawn(uint256 amount);
     event BaseURIUpdated(string oldURI, string newURI);
 
-    // Constants
+    /*───────────────────────── CONSTANTS ──────────────────────────*/
     bytes32 public constant WHITELISTED_ROLE = keccak256("WHITELISTED");
 
-    uint256 public immutable maxSupply;
+    uint256 private immutable maxSupply;
 
-    // State Variables
+    /*───────────────────────── STATE VARIABLES ──────────────────────────*/
     SalePhase private salePhase;
 
     uint256 private price;
@@ -77,7 +89,7 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
         maxSupply = _maxSupply;
     }
 
-    // Modifiers
+    /*───────────────────────── MODIFIERS ──────────────────────────*/
     // Enforce whitelist during the private phase.
     modifier onlyWhitelisted() {
         if (
@@ -89,7 +101,7 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
         _;
     }
 
-    // Functions
+    /*───────────────────────── FUNCTIONS ──────────────────────────*/
     /**
      * @notice Mint a new Zurcus NFT.
      * @dev Emits the ERC-721 {Transfer} event from the zero address to `_to`.
@@ -100,14 +112,20 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
      * @param _to      Recipient address.
      */
     function mint(address _to) external payable onlyWhitelisted {
-        // Validate payment amount.
-        if (msg.value != price) revert IncorrectPaymentError();
-        // Ensure we do not exceed the maximum supply.
-        if (mintedCount >= maxSupply) revert ExceedsMaxSupplyError();
+        uint256 currentPrice = price;
+        uint256 currentMinted = mintedCount;
+        uint256 cap = maxSupply;
+
+        // Validate payment amount and supply limits.
+        if (msg.value != currentPrice) revert IncorrectPaymentError();
+        if (currentMinted >= cap) revert ExceedsMaxSupplyError();
 
         // Increment counter & mint using the new index as tokenId (1-based).
-        mintedCount += 1;
-        _safeMint(_to, mintedCount);
+        unchecked {
+            currentMinted += 1;
+            mintedCount = currentMinted;
+        }
+        _safeMint(_to, currentMinted);
     }
 
     /**
@@ -124,14 +142,15 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
         }
     }
 
-    // Admin functions
+    /*───────────────────────── ADMIN FUNCTIONS ──────────────────────────*/
     /**
      * @notice Withdraw all Ether held by the contract to the owner.
      * @dev Emits a {FundsWithdrawn} event.
      */
     function withdraw() external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
-        (bool sent, ) = payable(owner()).call{value: balance}("");
+        address payable ownerAddr = payable(owner());
+        (bool sent, ) = ownerAddr.call{value: balance}("");
         if (!sent) revert WithdrawFailedError();
         emit FundsWithdrawn(balance);
     }
@@ -142,9 +161,9 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
      * @param _newPrice Price in wei.
      */
     function setPrice(uint256 _newPrice) external onlyOwner {
-        uint256 old = price;
+        uint256 oldPrice = price;
         price = _newPrice;
-        emit PriceUpdated(old, _newPrice);
+        emit PriceUpdated(oldPrice, _newPrice);
     }
 
     /**
@@ -176,12 +195,12 @@ contract ZurcusNFT is ERC721, Ownable, AccessControl, ReentrancyGuard {
      */
     function setSalePhase(uint8 _phase) external onlyOwner {
         if (_phase > uint8(SalePhase.PublicSale)) revert InvalidPhaseError();
-        SalePhase old = salePhase;
+        SalePhase previousPhase = salePhase;
         salePhase = SalePhase(_phase);
-        emit SalePhaseUpdated(old, salePhase);
+        emit SalePhaseUpdated(previousPhase, salePhase);
     }
 
-    // Receive and Fallback so that the conract can only receive WEI via minting.
+    /*───────────────────────── RECEIVE AND FALLBACK ──────────────────────────*/
     receive() external payable {
         revert DirectTransferNotAllowed();
     }
